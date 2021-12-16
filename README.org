@@ -1,0 +1,11 @@
+Library for computational exploration of the ternary relation on a
+group /G/ given by (x,y,z) ∈ AC(/G/) ⇔ [x⁻¹y, x⁻¹z] = 1.
+
+To deal with groups we use the [[https://github.com/stylewarning/cl-permutation][cl-permutation]] library, so all groups
+must be given via a permutation representation.
+
+Currently there are functions to explore which ternary relations are
+induced by AC(/G/) on subsets of /G/ of a given size /k/. To determine
+whether two relation are isomorphic we canonicalize them by taking the
+lexicographically minimal representation among its orbit under the
+action of the symmetric group. This seems fast enough for small /k/.
