@@ -50,7 +50,13 @@
          (list (apply #'perm:make-cycle (alex:iota n :start 1))))
    n))
 
-;; TODO: semidihedral, generalized quaternion, C_m x| C_n, etc.
+(defun alternating (n)
+  "Alternating group on n letters."
+  (perm:group-from-cycles
+   (loop for k from 3 to n collect (list (perm:make-cycle 1 2 k)))
+   n))
+
+;; TODO: semidihedral, generalized quaternion
 
 ;;; Isomorphism of small hypergraphs
 
