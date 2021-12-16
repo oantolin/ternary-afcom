@@ -3,21 +3,6 @@
 
 ;;; Compute affinely commuting triples
 
-(defun afcom (G)
-  (uiop:while-collecting (relate)
-    (alexandria:map-combinations
-     (lambda (triple)
-       (destructuring-bind ((i . x) (j . y) (k . z)) triple
-         (let* ((x-1 (perm:perm-inverse x))
-                (a (perm:perm-compose x-1 y))
-                (b (perm:perm-compose x-1 z)))
-           (when (perm:perm= (perm:perm-compose a b) (perm:perm-compose b a))
-             (relate (list i j k))))))
-     (let ((i 0))
-       (uiop:while-collecting (collect)
-         (perm:do-group-elements (x G)
-           (collect (cons (incf i) x)))))
-     :length 3)))
 
 (defun afcom (G)
   (uiop:while-collecting (relate)
