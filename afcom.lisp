@@ -11,6 +11,7 @@
 ;;; Compute affinely commuting triples
 
 (defun afcom (G)
+  "Return the list of affinely commuting triples in G."
   (uiop:while-collecting (relate)
     (alexandria:map-combinations
      (lambda (triple)
@@ -39,6 +40,7 @@
 ;;; Isomorphism of small hypergraphs
 
 (defun lex< (xs ys &key (eq #'=) (lt #'<))
+  "Lexicographical ordering realtive to EQ and LT."
   (loop for xt on xs and yt on ys
         while (and xt yt (funcall eq (car xt) (car yt)))
         finally (return (if (null xt)
@@ -46,18 +48,26 @@
                             (and yt (funcall lt (car xt) (car yt)))))))
 
 (defun map-vertices (fn hypergraph)
+  "Apply FN to each vertex of HYPERGRAPH."
   (sort (mapcar (lambda (edge) (sort (mapcar fn edge) #'<)) hypergraph) #'lex<))
 
 (defun normalize (hypergraph &key (test #'equal))
+  "Return an isomorphic copy of HYPERGRAPH with vertices {1, 2, ..., n}."
   (let ((vertices (reduce (lambda (x y) (union x y :test test))
                           hypergraph :initial-value nil)))
     (map-vertices
      (lambda (v) (1+ (position v vertices :test test))) hypergraph)))
 
 (defun number-of-vertices (hypergraph)
+  "Return number of vertices of HYPERGRAPH.
+This assumes the vertices are {1, 2, ..., n} for some n."
   (reduce #'max (reduce #'append hypergraph) :initial-value 0))
 
 (defun canonicalize (hypergraph)
+  "Return a canonical representative of the isomorphism class of HYPERGRAPH.
+This assumes the vertices are {1, 2, ..., n} for some n. You can
+compare two hypergraphs for isomorphism by comparing their canonical
+representatives for equality."
   (when hypergraph
     (let ((canon hypergraph))
       (perm:doperms (p (number-of-vertices hypergraph))
@@ -66,6 +76,7 @@
       canon)))
 
 (defun map-subsets (fn set)
+  "Apply FN to all subsets of SET."
   (if (null set)
       (funcall fn nil)
       (let ((x (car set)))
@@ -73,6 +84,11 @@
                      (cdr set)))))
 
 (defun collect-hypergraphs (process &key (canonicalize t))
+  "Return a deduplicated collection of hypergraphs produced by PROCESS.
+PROCESS should be a function of one argument and will be called with a
+function that should be called on each hypergraph to be collected. If
+CANONICALIZE is non-nil, each hypergraph will be canonicalized before
+collection."
   (let ((hypergraphs (make-hash-table :test #'equal)))
     (funcall
      process
@@ -81,6 +97,7 @@
     (alex:hash-table-keys hypergraphs)))
 
 (defun complete-uniform-hypergraph (n k)
+  "Return the complete K-uniform hypergraph on N vertices."
   (uiop:while-collecting (save-edge)
     (alex:map-combinations
      #'save-edge
@@ -88,18 +105,22 @@
      :length k :copy t)))
 
 (defun uniform-hypergraphs (n k)
+  "Return a list of K-uniform hypergraphs on N vertices."
   (collect-hypergraphs
    (lambda (save-hypergraph)
      (map-subsets save-hypergraph (complete-uniform-hypergraph n k)))
    :canonicalize t))
 
 (defun induced-subhypergraph (hypergraph subset)
+  "Return the induced subhypergraph of HYPERGRAPH on a SUBSET of vertices.
+The induced subhypergraph is canonicalized."
   (canonicalize
    (normalize
     (remove-if-not (lambda (edge) (subsetp edge subset)) hypergraph)
     :test #'eql)))
 
 (defun map-induced-subhypergraphs (fn hypergraph size)
+  "Apply FN to each induced subhypergraph of HYPERGRAPH of given SIZE."
   (let ((n (number-of-vertices hypergraph)))
     (when (>= n size)
      (alex:map-combinations
@@ -109,12 +130,14 @@
      :length size))))
 
 (defun all-induced-subhypergraphs (hypergraph size)
+  "Return list of all induced subhypergraphs of HYPERGRAPH of given SIZE."
   (collect-hypergraphs
    (lambda (save-hypergraph)
      (map-induced-subhypergraphs save-hypergraph hypergraph size))
    :canonicalize nil))
 
 (defun has-induced-subhypergraph-p (hypergraph subhypergraph)
+  "Does the HYPERGRAPH have the SUBHYPERGRAPH as an induced subhypergraph?"
   (map-induced-subhypergraphs
    (lambda (h)
      (when (equal h subhypergraph) (return-from has-induced-subhypergraph-p t)))
