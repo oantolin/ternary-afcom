@@ -35,6 +35,21 @@
     (cons n (alex:iota (1- n) :start 1))
     (append (alex:iota (1- n) :start (1- n) :step -1) (list n)))))
 
+(defun semidirect-product-cyclics (a n)
+  "The group Z/n x| <a>, where a is an invertible element of Z/n."
+  (assert (= (gcd a n) 1))
+  (perm:group-from
+   (list
+    (cons n (alex:iota (1- n) :start 1))
+    (loop for k below n collect (1+ (mod (* a k) n))))))
+
+(defun symmetric (n)
+  "Symmetric group on n letters."
+  (perm:group-from-cycles
+   (list (list (perm:make-cycle 1 2))
+         (list (apply #'perm:make-cycle (alex:iota n :start 1))))
+   n))
+
 ;; TODO: semidihedral, generalized quaternion, C_m x| C_n, etc.
 
 ;;; Isomorphism of small hypergraphs
