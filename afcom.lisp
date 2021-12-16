@@ -3,7 +3,7 @@
 
 (defpackage ternary-afcom
   (:use #:cl)
-  (:nicknames #:ac)
+  (:nicknames #:afcom)
   (:local-nicknames (#:alex #:alexandria)))
 
 (in-package :ternary-afcom)
@@ -115,8 +115,8 @@
    :canonicalize nil))
 
 (defun has-induced-subhypergraph-p (hypergraph subhypergraph)
-  ((map-induced-subhypergraphs
+  (map-induced-subhypergraphs
    (lambda (h)
      (when (equal h subhypergraph) (return-from has-induced-subhypergraph-p t)))
    hypergraph (number-of-vertices subhypergraph))
-  nil))
+  nil)
