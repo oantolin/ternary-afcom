@@ -1,8 +1,14 @@
 (ql:quickload :cl-permutation)
 (ql:quickload :alexandria)
 
-;;; Compute affinely commuting triples
+(defpackage ternary-afcom
+  (:use #:cl)
+  (:nicknames #:ac)
+  (:local-nicknames (#:alex #:alexandria)))
 
+(in-package :ternary-afcom)
+
+;;; Compute affinely commuting triples
 
 (defun afcom (G)
   (uiop:while-collecting (relate)
@@ -25,8 +31,8 @@
   "The dihedral group of order 2n."
   (perm:group-from
    (list
-    (cons n (alexandria:iota (1- n) :start 1))
-    (append (alexandria:iota (1- n) :start (1- n) :step -1) (list n)))))
+    (cons n (alex:iota (1- n) :start 1))
+    (append (alex:iota (1- n) :start (1- n) :step -1) (list n)))))
 
 ;; TODO: semidihedral, generalized quaternion, C_m x| C_n, etc.
 
@@ -72,13 +78,13 @@
      process
      (lambda (h)
        (setf (gethash (if canonicalize (canonicalize h) h) hypergraphs) t)))
-    (alexandria:hash-table-keys hypergraphs)))
+    (alex:hash-table-keys hypergraphs)))
 
 (defun complete-uniform-hypergraph (n k)
   (uiop:while-collecting (save-edge)
-    (alexandria:map-combinations
+    (alex:map-combinations
      #'save-edge
-     (alexandria:iota n :start 1)
+     (alex:iota n :start 1)
      :length k :copy t)))
 
 (defun uniform-hypergraphs (n k)
@@ -92,10 +98,10 @@
    (remove-if-not (lambda (edge) (subsetp edge subset)) hypergraph)))
 
 (defun map-induced-subhypergraphs (fn hypergraph size)
-  (alexandria:map-combinations
+  (alex:map-combinations
    (lambda (subset)
      (funcall fn (induced-subhypergraph hypergraph subset)))
-   (alexandria:iota (number-of-vertices hypergraph) :start 1)
+   (alex:iota (number-of-vertices hypergraph) :start 1)
    :length size))
 
 (defun all-induced-hypergraphs (hypergraph size)
