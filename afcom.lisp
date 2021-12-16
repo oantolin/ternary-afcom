@@ -48,9 +48,9 @@
 (defun map-vertices (fn hypergraph)
   (sort (mapcar (lambda (edge) (sort (mapcar fn edge) #'<)) hypergraph) #'lex<))
 
-(defun normalize (hypergraph &key (test #'perm:perm=))
+(defun normalize (hypergraph &key (test #'equal))
   (let ((vertices (reduce (lambda (x y) (union x y :test test))
-                          hypergraph)))
+                          hypergraph :initial-value nil)))
     (map-vertices
      (lambda (v) (1+ (position v vertices :test test))) hypergraph)))
 
@@ -95,24 +95,28 @@
 
 (defun induced-subhypergraph (hypergraph subset)
   (canonicalize
-   (remove-if-not (lambda (edge) (subsetp edge subset)) hypergraph)))
+   (normalize
+    (remove-if-not (lambda (edge) (subsetp edge subset)) hypergraph)
+    :test #'eql)))
 
 (defun map-induced-subhypergraphs (fn hypergraph size)
-  (alex:map-combinations
-   (lambda (subset)
-     (funcall fn (induced-subhypergraph hypergraph subset)))
-   (alex:iota (number-of-vertices hypergraph) :start 1)
-   :length size))
+  (let ((n (number-of-vertices hypergraph)))
+    (when (>= n size)
+     (alex:map-combinations
+     (lambda (subset)
+       (funcall fn (induced-subhypergraph hypergraph subset)))
+     (alex:iota n :start 1)
+     :length size))))
 
-(defun all-induced-hypergraphs (hypergraph size)
+(defun all-induced-subhypergraphs (hypergraph size)
   (collect-hypergraphs
    (lambda (save-hypergraph)
      (map-induced-subhypergraphs save-hypergraph hypergraph size))
    :canonicalize nil))
 
-(defun has-induced-subhypergraphp (hypergraph subhypergraph)
-  (map-induced-subhypergraphs
+(defun has-induced-subhypergraph-p (hypergraph subhypergraph)
+  ((map-induced-subhypergraphs
    (lambda (h)
-     (when (equal h subhypergraph) (return-from has-induced-subhypergraphp t)))
+     (when (equal h subhypergraph) (return-from has-induced-subhypergraph-p t)))
    hypergraph (number-of-vertices subhypergraph))
-  nil)
+  nil))
