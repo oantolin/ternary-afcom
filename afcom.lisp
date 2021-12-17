@@ -10,17 +10,20 @@
 
 ;;; Compute affinely commuting triples
 
+(defun commute-affinely-p (x y z)
+  "Does the permutations X, Y & Z commute affinely?"
+  (let* ((x-1 (perm:perm-inverse x))
+         (a (perm:perm-compose x-1 y))
+         (b (perm:perm-compose x-1 z)))
+    (perm:perm= (perm:perm-compose a b) (perm:perm-compose b a))))
+
 (defun afcom (G)
   "Return the list of affinely commuting triples in G."
   (uiop:while-collecting (relate)
     (alex:map-combinations
      (lambda (triple)
-       (destructuring-bind (x y z) triple
-         (let* ((x-1 (perm:perm-inverse x))
-                (a (perm:perm-compose x-1 y))
-                (b (perm:perm-compose x-1 z)))
-           (when (perm:perm= (perm:perm-compose a b) (perm:perm-compose b a))
-             (relate triple)))))
+       (when (apply #'commute-affinely-p triple)
+         (relate triple)))
      (uiop:while-collecting (collect)
        (perm:do-group-elements (x G)
          (collect x)))
@@ -146,6 +149,8 @@ collection."
      (map-subsets save-hypergraph (complete-uniform-hypergraph n k)))
    :canonicalize t))
 
+;;; Induced subhypergraphs
+
 (defun induced-subhypergraph (hypergraph subset)
   "Return the induced subhypergraph of HYPERGRAPH on a SUBSET of vertices.
 The induced subhypergraph is canonicalized."
@@ -179,6 +184,8 @@ The induced subhypergraph is canonicalized."
    hypergraph (number-of-vertices subhypergraph))
   nil)
 
+;;; Searching for hypergraphs inside AfCom(G)
+
 (defun missing-uniform-hypergraphs (n hypergraphs &rest groups)
   "List N-vertex 3-uniform HYPERGRAPHS not found in afcom of any of the GROUPS.
 The HYPERGRAPHS parameter can be the symbol :all meaning all 3-uniform
@@ -194,7 +201,45 @@ hypegraphs on N vertices which do not have an induced copy of
    (if (eq hypergraphs :all)
        (remove-if
         (lambda (hypergraph)
-          (has-induced-subhypergraph-p hypergraph
-                                       '((1 2 3) (1 2 4) (1 3 4))))
+          (has-induced-subhypergraph-p hypergraph '((1 2 3) (1 2 4) (1 3 4))))
         (uniform-hypergraphs n 3))
        hypergraphs)))
+
+(defun prepare (hypergraph)
+  "Parse HYPERGRAPH into arrays of affinely commuting conditions.
+Returns the number of vertices of the HYPERGRAPH and two arrays, in
+the first the k-th entry lists pairs (i j) such that (i j k) should be
+an affinely commuting triple. The second array lists the remaining
+pairs, those for which the triple should not be affinely commutative."
+  (let* ((v (number-of-vertices hypergraph))
+         (yes (make-array (1+ v) :initial-element nil))
+         (no (make-array (1+ v) :initial-element nil)))
+    (dolist (h hypergraph)
+      (push (butlast h) (aref yes (car (last h)))))
+    (dotimes (u (1+ v))
+      (setf (aref no u)
+            (loop for i from 1 below u
+                  append (loop for j from (1+ i) below u
+                               for e = (list i j)
+                               unless (member e (aref yes u) :test #'equal)
+                                 collect e))))
+    (values v yes no)))
+
+(defun realize (hypergraph n)
+  (multiple-value-bind (v yes no) (prepare hypergraph)
+    (let ((r (make-array (1+ v) :initial-element nil)))
+      (labels
+          ((try (u)
+             (if (> u v)
+                 r
+                 (perm:doperms (p n)
+                   (and
+                    (loop for i from 1 below u never (perm:perm= p (aref r i)))
+                    (loop for (i j) in (aref yes u)
+                          always (commute-affinely-p (aref r i) (aref r j) p))
+                    (loop for (i j) in (aref no u)
+                          never (commute-affinely-p (aref r i) (aref r j) p))
+                    (setf (aref r u) p)
+                    (when (try (1+ u)) (return-from try r)))))))
+        (setf (aref r 1) (perm:perm-identity n))
+        (try 2)))))
