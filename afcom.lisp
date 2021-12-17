@@ -179,9 +179,10 @@ The induced subhypergraph is canonicalized."
    hypergraph (number-of-vertices subhypergraph))
   nil)
 
-(defun missing-uniform-hypergraphs (n k &rest groups)
-  "List K-uniform hypergraphs not found in afcom of any of the GROUPS.
-Only includes hypergraphs which do not have an induced
+(defun missing-uniform-hypergraphs (n hypergraphs &rest groups)
+  "List N-vertex 3-uniform HYPERGRAPHS not found in afcom of any of the GROUPS.
+The HYPERGRAPHS parameter can be the symbol :all meaning all 3-uniform
+hypegraphs on N vertices which do not have an induced copy of
 ((1 2 3) (1 2 4) (1 3 4)), since that cannot occur in an (afcom G)."
   (reduce
    (lambda (hypergraphs group)
@@ -189,8 +190,11 @@ Only includes hypergraphs which do not have an induced
                      (all-induced-subhypergraphs (normalize (afcom group)) n)
                      :test #'equal))
    groups
-   :initial-value (remove-if
-                   (lambda (hypergraph)
-                     (has-induced-subhypergraph-p hypergraph
-                                                  '((1 2 3) (1 2 4) (1 3 4))))
-                   (uniform-hypergraphs n k))))
+   :initial-value
+   (if (eq hypergraphs :all)
+       (remove-if
+        (lambda (hypergraph)
+          (has-induced-subhypergraph-p hypergraph
+                                       '((1 2 3) (1 2 4) (1 3 4))))
+        (uniform-hypergraphs n 3))
+       hypergraphs)))
