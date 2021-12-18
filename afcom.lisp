@@ -227,6 +227,7 @@ pairs, those for which the triple should not be affinely commutative."
 
 (defun realize (hypergraph n)
   (multiple-value-bind (v yes no) (prepare hypergraph)
+    (when (< v 3) (return-from realize t))
     (let ((r (make-array (1+ v) :initial-element nil)))
       (labels
           ((try (u)
@@ -243,3 +244,11 @@ pairs, those for which the triple should not be affinely commutative."
                     (when (try (1+ u)) (return-from try r)))))))
         (setf (aref r 1) (perm:perm-identity n))
         (try 2)))))
+
+(defun size-5-not-in-sym-6 ()
+  (remove-if
+   (lambda (h)
+     (or (has-induced-subhypergraph-p h '((1 2 3) (1 2 4) (1 3 4)))
+         ;; (equal h '((1 2 3) (1 2 4) (1 3 5) (2 4 5) (3 4 5)))
+         (realize h 6)))
+   (uniform-hypergraphs 5 3)))
