@@ -144,10 +144,20 @@ collection."
 
 (defun uniform-hypergraphs (n k)
   "Return a list of K-uniform hypergraphs on N vertices."
-  (collect-hypergraphs
-   (lambda (save-hypergraph)
-     (map-subsets save-hypergraph (complete-uniform-hypergraph n k)))
-   :canonicalize t))
+  (if (< n k)
+      '(())
+      (collect-hypergraphs
+       (lambda (save-hypergraph)
+         (let ((attach (complete-uniform-hypergraph (1- n) (1- k))))
+           (mapc (lambda (h)
+                   (map-subsets
+                    (lambda (s)
+                      (funcall
+                       save-hypergraph
+                       (append h (mapcar (lambda (e) (append e (list n))) s))))
+                    attach))
+                 (uniform-hypergraphs (1- n) k))))
+       :canonicalize t)))
 
 ;;; Induced subhypergraphs
 
