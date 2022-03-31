@@ -163,11 +163,11 @@ The induced subhypergraph is canonicalized."
   "Apply FN to each induced subhypergraph of HYPERGRAPH of given SIZE."
   (let ((n (number-of-vertices hypergraph)))
     (when (>= n size)
-     (alex:map-combinations
-     (lambda (subset)
-       (funcall fn (induced-subhypergraph hypergraph subset)))
-     (alex:iota n :start 1)
-     :length size))))
+      (alex:map-combinations
+       (lambda (subset)
+         (funcall fn (induced-subhypergraph hypergraph subset)))
+       (alex:iota n :start 1)
+       :length size))))
 
 (defun all-induced-subhypergraphs (hypergraph size)
   "Return list of all induced subhypergraphs of HYPERGRAPH of given SIZE."
