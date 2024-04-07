@@ -264,3 +264,10 @@ pairs, those for which the triple should not be affinely commutative."
          ;; (equal h '((1 2 3) (1 2 4) (1 3 5) (2 4 5) (3 4 5)))
          (realize h 6)))
    (uniform-hypergraphs 5 3)))
+
+;;; Some hypergraphs
+
+(defparameter snub-disphenoid
+  '((1 2 3) (1 2 6) (1 3 4) (1 4 5) (1 5 6)
+    (2 3 8) (2 7 8) (3 4 8) (4 5 8) (5 7 8)
+    (5 6 7)))
